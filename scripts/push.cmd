@@ -1,7 +1,7 @@
 @echo off
 
 echo Pulling latest changes from GitHub...
-git pull origin main
+git pull origin main --no-edit
 
 echo Adding files...
 git add .
