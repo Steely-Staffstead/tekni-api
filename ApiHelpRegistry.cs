@@ -8,6 +8,41 @@ public static class ApiHelpRegistry
         {
             new ApiHelpSpec
             {
+                Name = "help",
+                Endpoint = "/api/help",
+                Method = "GET",
+                Description = "Returns documentation for all APIs or a specific API.",
+                Parameters = new List<ApiParameterSpec>
+                {
+                    new ApiParameterSpec
+                    {
+                        Name = "apiName",
+                        Type = "string",
+                        Required = false,
+                        Description = "Optional. If provided, returns documentation for only that API."
+                    }
+                },
+                Examples = new List<ApiExampleSpec>
+                {
+                    new ApiExampleSpec
+                    {
+                        Description = "List all available APIs",
+                        Url = "/api/help"
+                    },
+                    new ApiExampleSpec
+                    {
+                        Description = "Get documentation for the financials API",
+                        Url = "/api/help?apiName=financials"
+                    }
+                },
+                Response = new ApiResponseSpec
+                {
+                    Format = "application/json",
+                    Shape = "success, count, data[]"
+                }
+            },
+            new ApiHelpSpec
+            {
                 Name = "financials",
                 Endpoint = "/api/financials",
                 Method = "GET",
