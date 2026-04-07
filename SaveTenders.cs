@@ -35,7 +35,9 @@ public class SaveTenders
             return bad;
         }
 
-        if (string.IsNullOrWhiteSpace(payload.UserPrincipal) || string.IsNullOrWhiteSpace(payload.CompanyId) || payload.Year is null)
+        if (string.IsNullOrWhiteSpace(payload.UserPrincipal) ||
+            string.IsNullOrWhiteSpace(payload.CompanyId) ||
+            payload.Year is null)
         {
             var bad = req.CreateResponse(HttpStatusCode.BadRequest);
             await bad.WriteAsJsonAsync(new
@@ -59,9 +61,20 @@ public class SaveTenders
                 CommandTimeout = 180
             };
 
-            cmd.Parameters.Add(new SqlParameter("@user_principal", SqlDbType.NVarChar, 256) { Value = payload.UserPrincipal!.Trim() });
-            cmd.Parameters.Add(new SqlParameter("@company_id", SqlDbType.NVarChar, 50) { Value = payload.CompanyId!.Trim() });
-            cmd.Parameters.Add(new SqlParameter("@year", SqlDbType.Int) { Value = payload.Year.Value });
+            cmd.Parameters.Add(new SqlParameter("@user_principal", SqlDbType.NVarChar, 256)
+            {
+                Value = payload.UserPrincipal.Trim()
+            });
+
+            cmd.Parameters.Add(new SqlParameter("@company_id", SqlDbType.NVarChar, 50)
+            {
+                Value = payload.CompanyId.Trim()
+            });
+
+            cmd.Parameters.Add(new SqlParameter("@year", SqlDbType.Int)
+            {
+                Value = payload.Year.Value
+            });
 
             var linesTable = BuildLinesTable(lines);
 
@@ -93,7 +106,12 @@ public class SaveTenders
             };
 
             var response = req.CreateResponse(status);
-            await response.WriteAsJsonAsync(new { success = false, error = ex.Message, sqlErrorNumber = ex.Number });
+            await response.WriteAsJsonAsync(new
+            {
+                success = false,
+                error = ex.Message,
+                sqlErrorNumber = ex.Number
+            });
             return response;
         }
         catch (Exception ex)
@@ -116,8 +134,11 @@ public class SaveTenders
         dt.Columns.Add("contract_type", typeof(string));
         dt.Columns.Add("status_text", typeof(string));
         dt.Columns.Add("comment_text", typeof(string));
-        dt.Columns.Add("expected_decision_date", typeof(DateTime));
-        dt.Columns.Add("expected_start_date", typeof(DateTime));
+
+        // Important: send as string so SQL can decide if it is a real date
+        dt.Columns.Add("expected_decision_date", typeof(string));
+        dt.Columns.Add("expected_start_date", typeof(string));
+
         dt.Columns.Add("estimated_margin_pct", typeof(decimal));
         dt.Columns.Add("estimated_revenue", typeof(decimal));
         dt.Columns.Add("estimated_contribution", typeof(decimal));
@@ -126,7 +147,7 @@ public class SaveTenders
         {
             var row = dt.NewRow();
             row["line_no"] = l.LineNo;
-            row["project_name"] = l.ProjectName ?? string.Empty;
+            row["project_name"] = string.IsNullOrWhiteSpace(l.ProjectName) ? string.Empty : l.ProjectName.Trim();
             row["project_type"] = DbValue(l.ProjectType);
             row["customer_name"] = DbValue(l.CustomerName);
             row["contractor_name"] = DbValue(l.ContractorName);
@@ -134,19 +155,36 @@ public class SaveTenders
             row["contract_type"] = DbValue(l.ContractType);
             row["status_text"] = DbValue(l.StatusText);
             row["comment_text"] = DbValue(l.CommentText);
-            row["expected_decision_date"] = DbValue(l.ExpectedDecisionDate);
-            row["expected_start_date"] = DbValue(l.ExpectedStartDate);
+
+            // Send raw text through to SQL
+            row["expected_decision_date"] = DbValue(NormalizeString(l.ExpectedDecisionDate));
+            row["expected_start_date"] = DbValue(NormalizeString(l.ExpectedStartDate));
+
             row["estimated_margin_pct"] = DbValue(l.EstimatedMarginPct);
             row["estimated_revenue"] = DbValue(l.EstimatedRevenue);
             row["estimated_contribution"] = DbValue(l.EstimatedContribution);
+
             dt.Rows.Add(row);
         }
 
         return dt;
     }
 
+    private static string? NormalizeString(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return null;
+        return value.Trim();
+    }
+
     private static object DbValue<T>(T? value)
-        => value is null ? DBNull.Value : value;
+    {
+        if (value is null) return DBNull.Value;
+
+        if (value is string s && string.IsNullOrWhiteSpace(s))
+            return DBNull.Value;
+
+        return value;
+    }
 }
 
 public class SaveTendersRequest
@@ -168,8 +206,11 @@ public class TenderLineDto
     public string? ContractType { get; set; }
     public string? StatusText { get; set; }
     public string? CommentText { get; set; }
-    public DateTime? ExpectedDecisionDate { get; set; }
-    public DateTime? ExpectedStartDate { get; set; }
+
+    // Important: keep these as string, not DateTime?
+    public string? ExpectedDecisionDate { get; set; }
+    public string? ExpectedStartDate { get; set; }
+
     public decimal? EstimatedMarginPct { get; set; }
     public decimal? EstimatedRevenue { get; set; }
     public decimal? EstimatedContribution { get; set; }

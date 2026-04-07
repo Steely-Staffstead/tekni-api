@@ -11,7 +11,7 @@ public static class ApiHelpRegistry
                 Name = "help",
                 Endpoint = "/api/help",
                 Method = "GET",
-                Description = "Returns documentation for all APIs or a specific API.",
+                Description = "Returns documentation for all APIs or a specific API. Upd 2026-04-07",
                 Parameters = new List<ApiParameterSpec>
                 {
                     new ApiParameterSpec
