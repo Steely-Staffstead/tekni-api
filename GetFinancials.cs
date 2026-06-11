@@ -50,7 +50,7 @@ SELECT TOP (@top)
     f.local_account_code,
     f.source,
     f.type,
-    f.intercompany as IC_included,
+    a.intercompany as IC_included,
     c.company_legal_name,
     c.groupname,
     c.bl_name,
@@ -91,7 +91,7 @@ WHERE (@companyId IS NULL OR f.company_id = @companyId)
         )
       )
   AND (@ebitda IS NULL OR ISNULL(a.EBITDA, 0) = @ebitda)
-  AND (@icIncluded IS NULL OR ISNULL(f.intercompany, 0) = @icIncluded)
+  AND (@icIncluded IS NULL OR ISNULL(a.intercompany, 0) = @icIncluded)
 ORDER BY f.period, f.company_id, f.account_code;";
 
         try
