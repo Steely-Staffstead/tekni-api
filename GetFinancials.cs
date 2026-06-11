@@ -50,7 +50,7 @@ SELECT TOP (@top)
     f.local_account_code,
     f.source,
     f.type,
-    f.IC_included,
+    f.intercompany as IC_included,
     c.company_legal_name,
     c.groupname,
     c.bl_name,
@@ -59,7 +59,7 @@ SELECT TOP (@top)
     a.class_name,
     a.class_key,
     a.account_name, 
-    case when t.period between @periodFrompy and @periodTopy then 1 else 0 end  as comparison,
+    case when f.period between @periodFrompy and @periodTopy then 1 else 0 end  as comparison,
     a.EBITDA,
     a.Gross_profit,
     a.category_key,
@@ -91,7 +91,7 @@ WHERE (@companyId IS NULL OR f.company_id = @companyId)
         )
       )
   AND (@ebitda IS NULL OR ISNULL(a.EBITDA, 0) = @ebitda)
-  AND (@icIncluded IS NULL OR ISNULL(f.IC_included, 0) = @icIncluded)
+  AND (@icIncluded IS NULL OR ISNULL(f.intercompany, 0) = @icIncluded)
 ORDER BY f.period, f.company_id, f.account_code;";
 
         try
