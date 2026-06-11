@@ -46,20 +46,29 @@ public static class ApiHelpRegistry
                 Name = "financials",
                 Endpoint = "/api/financials",
                 Method = "GET",
-                Description = "Returns financial rows with optional filters.",
+                Description = "Returns financial rows with optional current-year and prior-year period filters. Default top is 20000 rows when not supplied.",
                 Parameters = new List<ApiParameterSpec>
                 {
                     new ApiParameterSpec { Name = "companyId", Type = "string", Required = false, Description = "Company identifier, for example TEGR" },
-                    new ApiParameterSpec { Name = "periodFrom", Type = "int", Required = false, Description = "Start period in YYYYMM format, for example 202501" },
-                    new ApiParameterSpec { Name = "periodTo", Type = "int", Required = false, Description = "End period in YYYYMM format, for example 202512" },
-                    new ApiParameterSpec { Name = "top", Type = "int", Required = false, DefaultValue = "1000", Description = "Maximum number of rows returned" }
+                    new ApiParameterSpec { Name = "periodFrom", Type = "int", Required = false, Description = "Current period start in YYYYMM format, for example 202605" },
+                    new ApiParameterSpec { Name = "periodTo", Type = "int", Required = false, Description = "Current period end in YYYYMM format, for example 202605" },
+                    new ApiParameterSpec { Name = "periodFromPy", Type = "int", Required = false, Description = "Prior-year comparison period start in YYYYMM format, for example 202505. Alias: periodfrom_py" },
+                    new ApiParameterSpec { Name = "periodToPy", Type = "int", Required = false, Description = "Prior-year comparison period end in YYYYMM format, for example 202505. Alias: periodto_py" },
+                    new ApiParameterSpec { Name = "ebitda", Type = "bit", Required = false, Description = "Optional filter. Use 1 for EBITDA rows, 0 for non-EBITDA rows. Omit for all." },
+                    new ApiParameterSpec { Name = "IC_included", Type = "bit", Required = false, Description = "Optional filter on f.IC_included. Use 1 or 0. Omit for all." },
+                    new ApiParameterSpec { Name = "top", Type = "int", Required = false, DefaultValue = "20000", Description = "Maximum number of rows returned. Capped at 20000." }
                 },
                 Examples = new List<ApiExampleSpec>
                 {
-                    new ApiExampleSpec { Description = "Get 100 rows for one company and one period range", Url = "/api/financials?companyId=TEKNI&periodFrom=202501&periodTo=202512&top=100" },
-                    new ApiExampleSpec { Description = "Get rows for one month only", Url = "/api/financials?periodFrom=202510&periodTo=202510" }
+                    new ApiExampleSpec { Description = "Get one current period and matching prior-year period", Url = "/api/financials?companyId=TEKNI&periodFrom=202605&periodTo=202605&periodFromPy=202505&periodToPy=202505" },
+                    new ApiExampleSpec { Description = "Same call with snake_case PY aliases and EBITDA filter", Url = "/api/financials?companyId=TEKNI&periodFrom=202605&periodTo=202605&periodfrom_py=202505&periodto_py=202505&ebitda=1&IC_included=0" },
+                    new ApiExampleSpec { Description = "Get rows for one period, default top 20000", Url = "/api/financials?periodFrom=202605&periodTo=202605" }
                 },
-                Response = new ApiResponseSpec { Format = "application/json", Shape = "success, count, data[]" }
+                Response = new ApiResponseSpec
+                {
+                    Format = "application/json",
+                    Shape = "success, count, top, filters, data[] including f.source, f.type, f.IC_included, a.cat_order, c.cg_order"
+                }
             },
             new ApiHelpSpec
             {
